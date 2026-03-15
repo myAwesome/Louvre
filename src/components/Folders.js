@@ -114,7 +114,7 @@ const Folders = () => {
         if (img.isDir) return false;
         if (!showUnmarkedOnly) return true;
         const action = actionsData[`${path}/${img.name}`] || {};
-        return !action.nomad && !action.like && !action.delete && !action.gp;
+        return !action.nomad && !action.like && !action.delete && !action.gp && !action.book;
     });
 
     return (
@@ -198,6 +198,11 @@ const Folders = () => {
                                     onClick={() => handleAction(key, "nomad")}>
                                     Nomad
                                 </button>
+                                <button
+                                    className={`btn btn-sm ${action.book ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(key, "book")}>
+                                    Book
+                                </button>
                             </div>
                         </div>
                     );
@@ -242,6 +247,11 @@ const Folders = () => {
                             className="btn btn-sm btn-outline-secondary"
                             onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "nomad")}>
                             Nomad
+                        </button>
+                        <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "book")}>
+                            Book
                         </button>
                         <button
                             className="btn btn-sm btn-primary"
