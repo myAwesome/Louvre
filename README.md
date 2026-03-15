@@ -1,70 +1,111 @@
-# Getting Started with Create React App
+# foto-ill
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Photo gallery manager for sorting, tagging, and organizing images.
 
-## Available Scripts
+**Stack:** React 19 (frontend) · Go / Gin (API) · MySQL (storage)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Node.js ≥ 18 + npm
+- Go ≥ 1.23
+- MySQL 8+
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Quick start
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+./dev.sh
+```
 
-### `npm run build`
+The script copies `.env.example` files, installs dependencies, and starts both servers. Edit the generated `.env` files before running if you need non-default values.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Manual setup
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 1. Environment
 
-### `npm run eject`
+```bash
+cp .env.example .env                    # frontend
+cp server/.env.example server/.env      # backend
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Edit `server/.env` — at minimum set:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Variable | Description |
+|---|---|
+| `DB_DSN` | MySQL connection string |
+| `ASSETS_DIR` | Absolute path to `public/assets/origin` |
+| `API_KEY` | Request auth key (leave empty to disable) |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins (default: `http://localhost:3000`) |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+`REACT_APP_API_URL` in `.env` points to the Go server (default `http://localhost:8080`).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 2. Database
 
-## Learn More
+Create the database and a user:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```sql
+CREATE DATABASE `foto-ill` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'foto'@'localhost' IDENTIFIED BY 'yourpassword';
+GRANT ALL PRIVILEGES ON `foto-ill`.* TO 'foto'@'localhost';
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The schema is auto-migrated on first run.
 
-### Code Splitting
+### 3. Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm install
+npm start       # dev server on :3000
+```
 
-### Analyzing the Bundle Size
+### 4. Backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+cd server
+go run main.go  # API on :8080
+```
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Project structure
 
-### Advanced Configuration
+```
+foto-ill/
+├── src/                  # React app
+│   └── components/
+│       ├── Folders.js    # Gallery browser with tagging
+│       ├── Bin.js        # Trash bin
+│       └── Sandbox.js    # Collections (GP / Liked / Nomad)
+├── server/
+│   ├── main.go           # Gin API server
+│   └── .env.example
+├── public/
+│   └── assets/           # Photo files (not tracked in git)
+├── .env.example
+└── dev.sh                # Bootstrap script
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## API endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/scan?path=` | List files/folders at path |
+| `GET` | `/actions?path=` | Get tags for items in path |
+| `POST` | `/actions?name=&action=` | Set tag (`like`, `del`, `gp`, `nomad`, `up`, `down`, `rank`) |
+| `GET` | `/trash-bin` | List deleted items |
+| `GET` | `/empty` | Permanently delete trash |
+| `GET` | `/all-gp` | All GP-tagged items |
+| `GET` | `/all-liked` | All liked items |
+| `GET` | `/all-nomad` | All nomad items |
+| `GET` | `/open-item?name=` | Open file in default app |
+| `GET` | `/photoshop?name=` | Open file in Photoshop 2025 |
+| `GET` | `/move-gp` | Move GP files to GP folder |
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Requests with `API_KEY` set require the `X-API-Key` header.
