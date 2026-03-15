@@ -5,8 +5,7 @@ import {useParams} from 'react-router-dom';
 const FOLDER = "origin"
 
 const Sandbox = () => {
-    const HOST = 'http://localhost';
-    const PORT = 8080;
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const [data, setData] = useState([]);
     const [random, setRandom] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -14,7 +13,7 @@ const Sandbox = () => {
 
 
     useEffect(() => {
-        fetch(`${HOST}:${PORT}/all-${id}`)
+        fetch(`${API_BASE}/all-${id}`)
             .then((response) => response.json())
             .then((json) => {
                 setData(Array.isArray(json) ? json : []);

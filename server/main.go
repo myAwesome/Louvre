@@ -32,18 +32,36 @@ type Act struct {
 }
 
 var db *gorm.DB
+var dir string
+var apiKey string
 
-const dir = "/Users/mac/www/foto-ill/public/assets/origin"
+func initConfig() {
+	dir = os.Getenv("ASSETS_DIR")
+	if dir == "" {
+		log.Fatal("ASSETS_DIR environment variable is required")
+	}
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		log.Fatalf("Invalid ASSETS_DIR: %v", err)
+	}
+	dir = absDir
+
+	apiKey = os.Getenv("API_KEY")
+	if apiKey == "" {
+		log.Println("WARNING: API_KEY not set, authentication is disabled")
+	}
+}
 
 func initDB() {
+	dsn := os.Getenv("DB_DSN")
+	if dsn == "" {
+		log.Fatal("DB_DSN environment variable is required")
+	}
 	var err error
-	dsn := "root:pass@tcp(127.0.0.1:3308)/foto-ill?charset=utf8mb4&parseTime=True&loc=Local"
-
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Cannot connect to DB:", err)
 	}
-
 }
 
 // FileInfo - структура для JSON-відповіді
@@ -56,24 +74,53 @@ type FileInfo struct {
 	Like      int64  `json:"like,omitempty"`
 }
 
-func openItem(c *gin.Context) {
-	name := c.Query("name") // Отримуємо name з параметрів запиту
-
-	if name != "" {
-		cmd := exec.Command("open", dir+"/"+name) // Вкажіть шлях до папки
-		cmd.Start()
+func authMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if apiKey != "" && c.GetHeader("X-API-Key") != apiKey {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		c.Next()
 	}
+}
 
+// validateItemPath validates a user-provided name and returns the safe absolute path
+func validateItemPath(name string) (string, error) {
+	if name == "" {
+		return "", fmt.Errorf("empty name")
+	}
+	absPath, err := filepath.Abs(filepath.Join(dir, name))
+	if err != nil {
+		return "", fmt.Errorf("invalid path")
+	}
+	rel, err := filepath.Rel(dir, absPath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return "", fmt.Errorf("path traversal detected")
+	}
+	return absPath, nil
+}
+
+func openItem(c *gin.Context) {
+	name := c.Query("name")
+	safePath, err := validateItemPath(name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
+		return
+	}
+	cmd := exec.Command("open", safePath)
+	cmd.Start()
 	c.JSON(http.StatusOK, "ok")
 }
 
 func photoshop(c *gin.Context) {
-	name := c.Query("name") // Отримуємо name з параметрів запиту
-	if name != "" {
-		cmd := exec.Command("open", "-a", "Adobe Photoshop 2025", dir+"/"+name)
-		cmd.Start()
+	name := c.Query("name")
+	safePath, err := validateItemPath(name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
+		return
 	}
-
+	cmd := exec.Command("open", "-a", "Adobe Photoshop 2025", safePath)
+	cmd.Start()
 	c.JSON(http.StatusOK, "ok")
 }
 
@@ -176,8 +223,6 @@ func countActions(path string) (map[string]int64, error) {
 }
 
 func trashBin(c *gin.Context) {
-	//path := c.Query("path")
-
 	var actions []Act
 	result := db.Where("`delete` = 1 order by id desc").Find(&actions)
 	if result.Error != nil {
@@ -262,41 +307,33 @@ func applyAction(act *Act, action string) {
 	switch action {
 	case "like":
 		if act.Like != nil && *act.Like == 1 {
-			// If "like" is already true (1), toggle it to false (0)
 			val := int8(0)
 			act.Like = &val
 		} else {
-			// If not, set "like" to true (1)
 			val := int8(1)
 			act.Like = &val
 		}
 	case "del":
 		if act.Delete != nil && *act.Delete == 1 {
-			// If "Delete" is already true (1), toggle it to false (0)
 			val := int8(0)
 			act.Delete = &val
 		} else {
-			// If not, set "Delete" to true (1)
 			val := int8(1)
 			act.Delete = &val
 		}
 	case "gp":
 		if act.GP != nil && *act.GP == 1 {
-			// If "GP" is already true (1), toggle it to false (0)
 			val := int8(0)
 			act.GP = &val
 		} else {
-			// If not, set "GP" to true (1)
 			val := int8(1)
 			act.GP = &val
 		}
 	case "nomad":
 		if act.Nomad != nil && *act.Nomad == 1 {
-			// If "Nomad" is already true (1), toggle it to false (0)
 			val := int8(0)
 			act.Nomad = &val
 		} else {
-			// If not, set "Nomad" to true (1)
 			val := int8(1)
 			act.Nomad = &val
 		}
@@ -321,10 +358,14 @@ func applyAction(act *Act, action string) {
 
 // DeleteFile видаляє файл за вказаним шляхом
 func DeleteFile(act *Act) error {
-	fmt.Println("removing ", dir+"/"+act.Name)
-	err := os.Remove(dir + "/" + act.Name)
+	safePath, err := validateItemPath(act.Name)
 	if err != nil {
-		fmt.Printf("не вдалося видалити файл %s", act.Name)
+		fmt.Printf("invalid path for file %s: %v\n", act.Name, err)
+		return nil
+	}
+	fmt.Println("removing", safePath)
+	if err := os.Remove(safePath); err != nil {
+		fmt.Printf("не вдалося видалити файл %s\n", act.Name)
 	}
 	return nil
 }
@@ -425,19 +466,27 @@ func moveAllToGP(c *gin.Context) {
 }
 
 func main() {
+	initConfig()
 	initDB()
 
 	r := gin.Default()
 
+	corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if corsOrigins == "" {
+		corsOrigins = "http://localhost:3000"
+	}
+
 	// Налаштування CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Дозволити всі домени
+		AllowOrigins:     strings.Split(corsOrigins, ","),
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-API-Key"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+
+	r.Use(authMiddleware())
 
 	r.GET("/scan", scanFolder)
 	r.GET("/trash-bin", trashBin)
