@@ -11,14 +11,18 @@ function App() {
   return (
       <Router>
         <div>
+          <nav className="app-nav">
+            <Link to={`/root`}>Home</Link>
+            <span className="sep">·</span>
+            <Link to={`/bin`}>Bin</Link>
+            <span className="sep">·</span>
+            <Link to={`/sandbox/gp`}>Google Photos</Link>
+            <span className="sep">·</span>
+            <Link to={`/sandbox/liked`}>Liked</Link>
+            <span className="sep">·</span>
+            <Link to={`/sandbox/nomad`}>Nomad</Link>
+          </nav>
           <div className="App">
-            <p>
-              <Link to={`/root`}>Home</Link>--|--
-              <Link to={`/bin`}>Bin</Link>--|--
-              <Link to={`/sandbox/gp`}>google</Link>--|--
-              <Link to={`/sandbox/liked`}>liked</Link>--|--
-              <Link to={`/sandbox/nomad`}>nomad</Link>
-            </p>
             <Routes>
               <Route path="/root" element={<Folders />} />
               <Route path="/folders/:id" element={<Folders />} />
@@ -32,4 +36,3 @@ function App() {
 }
 
 export default App;
-

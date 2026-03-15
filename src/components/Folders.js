@@ -14,8 +14,8 @@ const BreadcrumbLinks = ({ id }) => {
     for (let i = 0; i < parts.length; i++) {
         const path = parts.slice(0, i + 1).join("/");
         links.push(
-            <b> &nbsp;
-                <Link key={path} to={`/folders/${encodeURIComponent(path)}`} className="mr-2">
+            <b key={path}> &nbsp;
+                <Link to={`/folders/${encodeURIComponent(path)}`} className="mr-2">
                     {parts[i]}
                 </Link> &nbsp;
             </b>
@@ -28,7 +28,7 @@ const BreadcrumbLinks = ({ id }) => {
 const Folders = () => {
     const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const {id} = useParams();
-    const path = id || ""; // Якщо id немає, беремо root
+    const path = id || "";
 
     const [data, setData] = useState([]);
     const [actionsData, setActionsData] = useState({});
@@ -64,7 +64,6 @@ const Folders = () => {
     }, [path]);
 
     useEffect(() => {
-
         const handleKeyDown = (event) => {
             if (!showModal) return;
 
@@ -79,74 +78,60 @@ const Folders = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [showModal, data.length]);
+
     const openModal = (index) => {
         setCurrentImageIndex(index);
         setShowModal(true);
     };
     const closeModal = () => setShowModal(false);
 
-    const handleOpenItem = async (name, type ) => {
-
+    const handleOpenItem = async (name, type) => {
         await fetch(`${API_BASE}/${type}?name=${encodeURIComponent(name)}`, {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
         });
     }
-
 
     const handleAction = async (name, action) => {
         try {
             const response = await fetch(`${API_BASE}/actions?name=${encodeURIComponent(name)}&action=${encodeURIComponent(action)}`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
             });
 
-            if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
 
             const updatedAction = await response.json();
-            setActionsData(prev => ({
-                ...prev,
-                [name]: updatedAction
-            }));
+            setActionsData(prev => ({ ...prev, [name]: updatedAction }));
         } catch (error) {
             console.error("Action failed:", error.message);
         }
     };
-    if (loading) {
-        return <p>Завантаження...</p>;
-    }
+
+    if (loading) return <p style={{padding: 20, color: '#888'}}>Завантаження...</p>;
 
     const filteredData = data.filter(img => {
-        if (img.isDir) return false; // Пропускаємо папки
-        if (!showUnmarkedOnly) return true; // Якщо фільтр вимкнено, показуємо все
-
+        if (img.isDir) return false;
+        if (!showUnmarkedOnly) return true;
         const action = actionsData[`${path}/${img.name}`] || {};
         return !action.nomad && !action.like && !action.delete && !action.gp;
     });
 
     return (
-        <div>
+        <div className="gallery-wrap">
             <BreadcrumbLinks id={path} />
 
-            <Table striped bordered hover>
+            <Table striped bordered hover size="sm" style={{marginTop: 10}}>
                 <thead>
-                <tr id="breadcramps">
+                <tr>
                     <th>folder</th>
                     <th>files</th>
-
                     <th>likes</th>
                     <th>gp</th>
                     <th>nomad</th>
                 </tr>
                 </thead>
                 <tbody>
-
                 {data.map((item) => (
                     item.isDir ? (
                         <tr key={item.name}>
@@ -155,8 +140,7 @@ const Folders = () => {
                                      {item.name}
                                 </Link>
                             </td>
-                            <td> {item.fileCount}</td>
-
+                            <td>{item.fileCount}</td>
                             <td>{item.like}</td>
                             <td>{item.gp}</td>
                             <td>{item.nomad}</td>
@@ -165,135 +149,80 @@ const Folders = () => {
                 ))}
                 </tbody>
             </Table>
-            <div style={{ marginBottom: "10px" }}>
+
+            <div className="filter-bar">
                 <input
                     type="checkbox"
                     id="unmarked-filter"
                     checked={showUnmarkedOnly}
                     onChange={() => setShowUnmarkedOnly(prev => !prev)}
                 />
-                <label htmlFor="unmarked-filter"> NO MARKED</label>
+                <label htmlFor="unmarked-filter">NO MARKED</label>
             </div>
 
+            <h4 className="items-count"><b>{filteredData.length}</b> items</h4>
 
-            <div>
-                <h4><b>{filteredData.length}</b> items</h4>
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4, 1fr)",
-                    gap: 40,
-                    justifyItems: "center",
-                    maxWidth: 1250,
-                    margin: "auto"
-                }}>
-                    {filteredData.map((img, index) => (
-                        img.isDir ? "" : (
-                            <div key={index} style={{
-                                width: "300px",
-                                height: "300px",
-                                cursor: "pointer",
-                                backgroundColor: img.name.slice(-3) !== "jpg" ? "white" : "transparent"
-                            }}>
-                                <div onClick={() => openModal(index)}
-                                     style={{
-                                         backgroundImage: `url("/assets/${FOLDER}/${path}/${img.name}")`,
-                                         width: "100%",
-                                         height: "100%",
-                                         backgroundSize: "cover"
-                                     }}/>
-
-                                <div style={{display: "flex", justifyContent: "center", gap: 5, marginTop: 5}}>
-                                    <b>{img.name.slice(-3).toLowerCase() !== "jpg" ? img.name.slice(-3) : " "} </b>
-                                    <span>{index}</span>
-                                    <button
-                                        className={`btn btn-sm ${actionsData[`${path}/${img.name}`]?.like ? "btn-success" : "btn-outline-secondary"}`}
-                                        onClick={() => handleAction(`${path}/${img.name}`, "like")}>
-                                        Like
-                                    </button>
-                                    <button
-                                        className={`btn btn-sm ${actionsData[`${path}/${img.name}`]?.delete ? "btn-danger" : "btn-outline-secondary"}`}
-                                        onClick={() => handleAction(`${path}/${img.name}`, "del")}>
-                                        Del
-                                    </button>
-                                    <button
-                                        className={`btn btn-sm ${actionsData[`${path}/${img.name}`]?.gp ? "btn-warning" : "btn-outline-secondary"}`}
-                                        onClick={() => handleAction(`${path}/${img.name}`, "gp")}>
-                                        GP
-                                    </button>
-                                    <button
-                                        className={`btn btn-sm ${actionsData[`${path}/${img.name}`]?.nomad ? "btn-primary" : "btn-outline-secondary"}`}
-                                        onClick={() => handleAction(`${path}/${img.name}`, "nomad")}>
-                                        nomad
-                                    </button>
-                                    {/*<button className="btn btn-sm btn-primary"*/}
-                                    {/*        onClick={() => handleAction(`${path}/${img.name}`, "up")}>*/}
-                                    {/*    +*/}
-                                    {/*</button>*/}
-                                    {/*<span style={{*/}
-                                    {/*    fontSize: "18px",*/}
-                                    {/*    fontWeight: "bold",*/}
-                                    {/*    minWidth: "30px",*/}
-                                    {/*    textAlign: "center"*/}
-                                    {/*}}>*/}
-                                    {/*    {actionsData[`${path}/${img.name}`]?.rank ?? 0}*/}
-                                    {/*</span>*/}
-                                    {/*<button className="btn btn-sm btn-primary"*/}
-                                    {/*        onClick={() => handleAction(`${path}/${img.name}`, "down")}>*/}
-                                    {/*    -*/}
-                                    {/*</button>*/}
-                                </div>
+            <div className="gallery-grid">
+                {filteredData.map((img, index) => {
+                    const key = `${path}/${img.name}`;
+                    const action = actionsData[key] || {};
+                    const ext = img.name.slice(-3).toLowerCase();
+                    const isNonJpg = ext !== "jpg";
+                    return (
+                        <div key={index} className={`gallery-card${isNonJpg ? " card-non-jpg" : ""}`}>
+                            <div
+                                className="gallery-thumb"
+                                onClick={() => openModal(index)}
+                                style={{ backgroundImage: `url("/assets/${FOLDER}/${path}/${img.name}")` }}
+                            />
+                            <div className="card-actions">
+                                {isNonJpg && <span className="card-ext">{ext}</span>}
+                                <span className="card-idx">{index}</span>
+                                <button
+                                    className={`btn btn-sm ${action.like ? "btn-success" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(key, "like")}>
+                                    Like
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.delete ? "btn-danger" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(key, "del")}>
+                                    Del
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.gp ? "btn-warning" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(key, "gp")}>
+                                    GP
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.nomad ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(key, "nomad")}>
+                                    Nomad
+                                </button>
                             </div>
-                        )
-                    ))}
-                </div>
+                        </div>
+                    );
+                })}
             </div>
 
             {showModal && (
-                <div onClick={closeModal} style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backdropFilter: "blur(4px)",
-                    backgroundColor: "rgba(0,0,0,.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexDirection: "column"
-                }}>
+                <div className="modal-overlay" onClick={closeModal}>
                     <img
                         onClick={(e) => e.stopPropagation()}
-                        className="img-fluid"
+                        className="modal-img"
                         src={`/assets/origin/${path}/${filteredData[currentImageIndex]?.name}`}
                         alt="Фото"
-                        style={{
-                            maxWidth: '90vw',
-                            height: 'auto',
-                            maxHeight: '90vh',
-                            objectFit: 'contain'
-                        }}
                     />
-                    <div style={{
-                        backgroundColor: "#fff",
-                        display: "flex",
-                        gap: "5px",
-                        padding: "5px",
-                        marginTop: "5px",
-                        borderRadius: "5px"
-                    }}
-                         onClick={(e) => e.stopPropagation()}
-                    >
-                        <button
-                                className="btn btn-sm btn-outline-secondary"
-                                onClick={() => handleOpenItem(`${path}/${filteredData[currentImageIndex]?.name}`, "open-item")}>open
-                            </button>
-
+                    <div className="modal-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleOpenItem(`${path}/${filteredData[currentImageIndex]?.name}`, "photoshop")}>PS
+                            onClick={() => handleOpenItem(`${path}/${filteredData[currentImageIndex]?.name}`, "open-item")}>
+                            open
                         </button>
-
+                        <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => handleOpenItem(`${path}/${filteredData[currentImageIndex]?.name}`, "photoshop")}>
+                            PS
+                        </button>
                         <button
                             className="btn btn-sm btn-outline-secondary"
                             onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "like")}>
@@ -310,18 +239,18 @@ const Folders = () => {
                             GP
                         </button>
                         <button
-                            className={`btn btn-sm "btn-primary" : "btn-outline-secondary"}`}
+                            className="btn btn-sm btn-outline-secondary"
                             onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "nomad")}>
-                            nomad
+                            Nomad
                         </button>
                         <button
                             className="btn btn-sm btn-primary"
                             onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "up")}>
                             +
                         </button>
-
-                        <button className="btn btn-sm btn-primary"
-                                onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "down")}>
+                        <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "down")}>
                             -
                         </button>
                     </div>

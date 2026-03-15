@@ -1,38 +1,171 @@
-.App {
+/* ── Navigation ───────────────────────────────────────────── */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 20px;
+  background: #0d0d0d;
+  border-bottom: 1px solid #2a2a2a;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-nav a {
+  color: #aaa;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.app-nav a:hover {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.app-nav .sep {
+  color: #333;
+  user-select: none;
+}
+
+/* ── Gallery wrap ─────────────────────────────────────────── */
+.gallery-wrap {
+  padding: 16px 20px;
+  color: #ddd;
+}
+
+.items-count {
+  color: #aaa;
+  font-size: 14px;
+  margin: 10px 0 14px;
+  font-weight: 400;
+}
+
+.items-count b {
+  color: #fff;
+  font-size: 16px;
+}
+
+/* ── Filter bar ───────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.filter-bar input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4f8ef7;
+  cursor: pointer;
+}
+
+.filter-bar label {
+  font-size: 13px;
+  color: #aaa;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Grid ─────────────────────────────────────────────────── */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1100px) {
+  .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 760px) {
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+.gallery-card {
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.gallery-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
+.gallery-card.card-non-jpg {
+  outline: 2px solid #e55;
+}
+
+.gallery-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: cover;
+  background-position: center;
+}
+
+/* ── Card action bar ──────────────────────────────────────── */
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 6px;
+  background: #111;
+  flex-wrap: wrap;
+}
+
+.card-actions .card-idx {
+  font-size: 11px;
+  color: #555;
+  min-width: 20px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.card-actions .card-ext {
+  font-size: 11px;
+  color: #e55;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* ── Modal ────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  flex-direction: column;
+  z-index: 1000;
 }
 
-.App-link {
-  color: #61dafb;
+.modal-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.modal-actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-top: 10px;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
