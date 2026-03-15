@@ -4,8 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const FOLDER = "origin"
 
 const Bin = () => {
-    const HOST = 'http://localhost';
-    const PORT = 8080;
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -15,7 +14,7 @@ const Bin = () => {
     }, []);
 
     const fetchTrashBin = async ()=> {
-        fetch(`${HOST}:${PORT}/trash-bin`)
+        fetch(`${API_BASE}/trash-bin`)
             .then((response) => response.json())
             .then((json) => {
                 setData(Array.isArray(json) ? json : []);
@@ -31,7 +30,7 @@ const Bin = () => {
     const handleEmptyAll = async () => {
         try {
             setLoading(true)
-            await fetch(`${HOST}:${PORT}/empty`, { method: "GET"});
+            await fetch(`${API_BASE}/empty`, { method: "GET"});
             setLoading(false)
             fetchTrashBin()
         } catch (error) {

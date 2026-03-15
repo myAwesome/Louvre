@@ -26,8 +26,7 @@ const BreadcrumbLinks = ({ id }) => {
 };
 
 const Folders = () => {
-    const HOST = 'http://localhost';
-    const PORT = 8080;
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const {id} = useParams();
     const path = id || ""; // Якщо id немає, беремо root
 
@@ -40,7 +39,7 @@ const Folders = () => {
 
 
     useEffect(() => {
-        fetch(`${HOST}:${PORT}/scan?path=${encodeURIComponent(path)}`)
+        fetch(`${API_BASE}/scan?path=${encodeURIComponent(path)}`)
             .then((response) => response.json())
             .then((json) => {
                 setData(Array.isArray(json) ? json : []);
@@ -52,7 +51,7 @@ const Folders = () => {
                 setLoading(false);
             });
 
-        fetch(`${HOST}:${PORT}/actions?path=${encodeURIComponent(path)}`)
+        fetch(`${API_BASE}/actions?path=${encodeURIComponent(path)}`)
             .then((response) => response.json())
             .then((json) => {
                 const actionsMap = {};
@@ -88,7 +87,7 @@ const Folders = () => {
 
     const handleOpenItem = async (name, type ) => {
 
-        await fetch(`${HOST}:${PORT}/${type}?name=${encodeURIComponent(name)}`, {
+        await fetch(`${API_BASE}/${type}?name=${encodeURIComponent(name)}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -99,7 +98,7 @@ const Folders = () => {
 
     const handleAction = async (name, action) => {
         try {
-            const response = await fetch(`${HOST}:${PORT}/actions?name=${encodeURIComponent(name)}&action=${encodeURIComponent(action)}`, {
+            const response = await fetch(`${API_BASE}/actions?name=${encodeURIComponent(name)}&action=${encodeURIComponent(action)}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
