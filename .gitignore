@@ -23,3 +23,4 @@ yarn-debug.log*
 yarn-error.log*
 /public/assets/
 server/.env
+server/fotoill-api-2
