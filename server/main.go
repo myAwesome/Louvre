@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"io/fs"
 	"log"
@@ -34,6 +38,7 @@ type Act struct {
 
 var db *gorm.DB
 var dir string
+var thumbsDir string
 var apiKey string
 
 func initConfig() {
@@ -49,6 +54,16 @@ func initConfig() {
 		log.Fatalf("Invalid ASSETS_DIR: %v", err)
 	}
 	dir = absDir
+
+	thumbsDir = os.Getenv("THUMBS_DIR")
+	if thumbsDir == "" {
+		thumbsDir = filepath.Join(filepath.Dir(dir), "300")
+	}
+	absThumbsDir, err := filepath.Abs(thumbsDir)
+	if err != nil {
+		log.Fatalf("Invalid THUMBS_DIR: %v", err)
+	}
+	thumbsDir = absThumbsDir
 
 	apiKey = os.Getenv("API_KEY")
 	if apiKey == "" {
@@ -469,6 +484,120 @@ func moveAllToGP(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "All GP files moved successfully"})
 }
 
+// resizeToFit scales src down to fit within maxSize×maxSize, preserving aspect ratio.
+// Returns src unchanged if it already fits.
+func resizeToFit(src image.Image, maxSize int) image.Image {
+	bounds := src.Bounds()
+	w, h := bounds.Dx(), bounds.Dy()
+	if w <= maxSize && h <= maxSize {
+		return src
+	}
+
+	newW, newH := maxSize, maxSize
+	if w >= h {
+		newH = h * maxSize / w
+	} else {
+		newW = w * maxSize / h
+	}
+	if newW < 1 {
+		newW = 1
+	}
+	if newH < 1 {
+		newH = 1
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, newW, newH))
+	for y := 0; y < newH; y++ {
+		for x := 0; x < newW; x++ {
+			srcX := bounds.Min.X + x*w/newW
+			srcY := bounds.Min.Y + y*h/newH
+			r, g, b, a := src.At(srcX, srcY).RGBA()
+			dst.SetRGBA(x, y, color.RGBA{
+				R: uint8(r >> 8),
+				G: uint8(g >> 8),
+				B: uint8(b >> 8),
+				A: uint8(a >> 8),
+			})
+		}
+	}
+	return dst
+}
+
+func createThumbnail(srcPath, dstPath string, maxSize int) error {
+	f, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	src, format, err := image.Decode(f)
+	if err != nil {
+		return fmt.Errorf("decode: %w", err)
+	}
+
+	thumb := resizeToFit(src, maxSize)
+
+	if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+		return err
+	}
+
+	out, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if format == "png" {
+		return png.Encode(out, thumb)
+	}
+	return jpeg.Encode(out, thumb, &jpeg.Options{Quality: 85})
+}
+
+func generateThumbs(c *gin.Context) {
+	var generated, skipped int
+	var errs []string
+
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+			return nil
+		}
+
+		relPath, _ := filepath.Rel(dir, path)
+		thumbPath := filepath.Join(thumbsDir, relPath)
+
+		if _, statErr := os.Stat(thumbPath); statErr == nil {
+			skipped++
+			return nil
+		}
+
+		if err := createThumbnail(path, thumbPath, 300); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", relPath, err))
+			return nil
+		}
+		generated++
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"generated": generated,
+		"skipped":   skipped,
+		"errors":    errs,
+	})
+}
+
 func main() {
 	initConfig()
 	initDB()
@@ -504,6 +633,7 @@ func main() {
 	r.GET("/empty", emptyTrashBin)
 	r.GET("/actions", getActionsByYear)
 	r.POST("/actions", postOrUpdateAction)
+	r.POST("/generate-thumbs", generateThumbs)
 
 	r.Run(":8080")
 }
