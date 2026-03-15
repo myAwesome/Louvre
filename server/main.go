@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -36,6 +37,9 @@ var dir string
 var apiKey string
 
 func initConfig() {
+	// Load .env if present (ignored if file doesn't exist)
+	_ = godotenv.Load()
+
 	dir = os.Getenv("ASSETS_DIR")
 	if dir == "" {
 		log.Fatal("ASSETS_DIR environment variable is required")
