@@ -9,6 +9,8 @@ const Sandbox = () => {
     const [data, setData] = useState([]);
     const [random, setRandom] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const {id} = useParams();
 
 
@@ -25,6 +27,29 @@ const Sandbox = () => {
                 setLoading(false);
             });
     }, [id]);
+
+    const images = data.filter(img => !img.is_dir);
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (!showModal) return;
+            if (event.key === 'ArrowRight') {
+                setCurrentImageIndex((prev) => (prev + 1) % images.length);
+            } else if (event.key === 'ArrowLeft') {
+                setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+            } else if (event.key === 'Escape') {
+                setShowModal(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showModal, images.length]);
+
+    const openModal = (index) => {
+        setCurrentImageIndex(index);
+        setShowModal(true);
+    };
+    const closeModal = () => setShowModal(false);
 
     // const handleEmptyAll = async () => {
     //     try {
@@ -58,26 +83,34 @@ const Sandbox = () => {
                     maxWidth: 1250,
                     margin: "auto"
                 }}>
-                    {data.map((img, index) => (
-                        img.is_dir ? "" : (
-                            <div key={index} style={{
-                                width: "300px",
-                                height: "300px",
-                                cursor: "pointer",
-                                backgroundColor: img.name.slice(-3) !== "jpg" ? "red" : "transparent"
-                            }}>
-                                <div style={{
-                                         // backgroundImage: `url("/assets/${FOLDER}/${id}/${img.name}")`,
-                                         backgroundImage: `url("/assets/${FOLDER}/${img.name}")`,
-                                         width: "100%",
-                                         height: "100%",
-                                         backgroundSize: "cover"
-                                     }}/>
-                            </div>
-                        )
+                    {images.map((img, index) => (
+                        <div key={index} style={{
+                            width: "300px",
+                            height: "300px",
+                            cursor: "pointer",
+                            backgroundColor: img.name.slice(-3) !== "jpg" ? "red" : "transparent"
+                        }} onClick={() => openModal(index)}>
+                            <div style={{
+                                backgroundImage: `url("/assets/${FOLDER}/${img.name}")`,
+                                width: "100%",
+                                height: "100%",
+                                backgroundSize: "cover"
+                            }}/>
+                        </div>
                     ))}
                 </div>
             </div>
+
+            {showModal && (
+                <div className="modal-overlay" onClick={closeModal}>
+                    <img
+                        onClick={(e) => e.stopPropagation()}
+                        className="modal-img"
+                        src={`/assets/${FOLDER}/${images[currentImageIndex]?.name}`}
+                        alt="Фото"
+                    />
+                </div>
+            )}
         </div>
     );
 };
