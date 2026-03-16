@@ -35,7 +35,7 @@ const Folders = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
+    const [activeFilters, setActiveFilters] = useState(new Set());
 
 
     useEffect(() => {
@@ -110,11 +110,27 @@ const Folders = () => {
 
     if (loading) return <p style={{padding: 20, color: '#888'}}>Завантаження...</p>;
 
+    const toggleFilter = (filter) => {
+        setActiveFilters(prev => {
+            const next = new Set(prev);
+            if (next.has(filter)) next.delete(filter);
+            else next.add(filter);
+            return next;
+        });
+    };
+
     const filteredData = data.filter(img => {
         if (img.isDir) return false;
-        if (!showUnmarkedOnly) return true;
+        if (activeFilters.size === 0) return true;
         const action = actionsData[`${path}/${img.name}`] || {};
-        return !action.nomad && !action.like && !action.delete && !action.gp && !action.book;
+        if (activeFilters.has('unmarked')) {
+            if (!action.nomad && !action.like && !action.delete && !action.gp && !action.book) return true;
+        }
+        if (activeFilters.has('like') && action.like) return true;
+        if (activeFilters.has('gp') && action.gp) return true;
+        if (activeFilters.has('nomad') && action.nomad) return true;
+        if (activeFilters.has('book') && action.book) return true;
+        return false;
     });
 
     return (
@@ -151,13 +167,31 @@ const Folders = () => {
             </Table>
 
             <div className="filter-bar">
-                <input
-                    type="checkbox"
-                    id="unmarked-filter"
-                    checked={showUnmarkedOnly}
-                    onChange={() => setShowUnmarkedOnly(prev => !prev)}
-                />
-                <label htmlFor="unmarked-filter">NO MARKED</label>
+                <button
+                    className={`btn btn-sm ${activeFilters.has('unmarked') ? "btn-secondary" : "btn-outline-secondary"}`}
+                    onClick={() => toggleFilter('unmarked')}>
+                    NO MARKED
+                </button>
+                <button
+                    className={`btn btn-sm ${activeFilters.has('like') ? "btn-success" : "btn-outline-success"}`}
+                    onClick={() => toggleFilter('like')}>
+                    Like
+                </button>
+                <button
+                    className={`btn btn-sm ${activeFilters.has('gp') ? "btn-warning" : "btn-outline-warning"}`}
+                    onClick={() => toggleFilter('gp')}>
+                    GP
+                </button>
+                <button
+                    className={`btn btn-sm ${activeFilters.has('nomad') ? "btn-primary" : "btn-outline-primary"}`}
+                    onClick={() => toggleFilter('nomad')}>
+                    Nomad
+                </button>
+                <button
+                    className={`btn btn-sm ${activeFilters.has('book') ? "btn-info" : "btn-outline-info"}`}
+                    onClick={() => toggleFilter('book')}>
+                    Book
+                </button>
             </div>
 
             <h4 className="items-count"><b>{filteredData.length}</b> items</h4>
