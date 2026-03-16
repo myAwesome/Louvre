@@ -21,6 +21,8 @@ function App() {
             <Link to={`/sandbox/liked`}>Liked</Link>
             <span className="sep">·</span>
             <Link to={`/sandbox/nomad`}>Nomad</Link>
+            <span className="sep">·</span>
+            <Link to={`/sandbox/book`}>Book</Link>
           </nav>
           <div className="App">
             <Routes>

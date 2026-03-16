@@ -33,6 +33,7 @@ type Act struct {
 	Delete  *int8  `json:"delete"`
 	GP      *int8  `json:"gp"`
 	Nomad   *int8  `json:"nomad"`
+	Book    *int8  `json:"book"`
 	Rank    *int   `json:"rank"`
 }
 
@@ -356,6 +357,14 @@ func applyAction(act *Act, action string) {
 			val := int8(1)
 			act.Nomad = &val
 		}
+	case "book":
+		if act.Book != nil && *act.Book == 1 {
+			val := int8(0)
+			act.Book = &val
+		} else {
+			val := int8(1)
+			act.Book = &val
+		}
 	case "up":
 		if act.Rank == nil {
 			val := 1
@@ -424,6 +433,16 @@ func showAllGP(c *gin.Context) {
 func showAllNomad(c *gin.Context) {
 	var actions []Act
 	result := db.Where("nomad = 1").Find(&actions)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, actions)
+}
+
+func showAllBook(c *gin.Context) {
+	var actions []Act
+	result := db.Where("book = 1").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -629,6 +648,7 @@ func main() {
 	r.GET("/photoshop", photoshop)
 	r.GET("/all-liked", showAllLiked)
 	r.GET("/all-nomad", showAllNomad)
+	r.GET("/all-book", showAllBook)
 	r.GET("/copy-nomad", copyNomad)
 	r.GET("/empty", emptyTrashBin)
 	r.GET("/actions", getActionsByYear)
