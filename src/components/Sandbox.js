@@ -7,7 +7,6 @@ import {useParams} from 'react-router-dom';
 const Sandbox = () => {
     const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const [data, setData] = useState([]);
-    const [random, setRandom] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -51,22 +50,6 @@ const Sandbox = () => {
     };
     const closeModal = () => setShowModal(false);
 
-    // const handleEmptyAll = async () => {
-    //     try {
-    //         setLoading(true)
-    //         const response = await fetch(`${HOST}:${PORT}/`, {
-    //             method: "GET",
-    //         });
-    //
-    //         setLoading(false)
-    //         setRandom(random+1)
-    //
-    //     } catch (error) {
-    //             console.error("Action failed:", error.message);
-    //     }
-    // }
-
-
     if (loading) {
         return <p>Завантаження...</p>;
     }
@@ -74,7 +57,6 @@ const Sandbox = () => {
         <div>
             <div>
                 <h4>{id}: <b>{data.length} </b></h4>
-                {/*<button className=" btn btn-danger" onClick={()=>handleEmptyAll()}>Empty All</button>*/}
                 <div style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(4, 1fr)",
