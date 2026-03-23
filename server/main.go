@@ -41,6 +41,8 @@ var db *gorm.DB
 var dir string
 var thumbsDir string
 var apiKey string
+var photoshopApp string
+var port string
 
 func initConfig() {
 	// Load .env if present (ignored if file doesn't exist)
@@ -69,6 +71,16 @@ func initConfig() {
 	apiKey = os.Getenv("API_KEY")
 	if apiKey == "" {
 		log.Println("WARNING: API_KEY not set, authentication is disabled")
+	}
+
+	photoshopApp = os.Getenv("PHOTOSHOP_APP")
+	if photoshopApp == "" {
+		photoshopApp = "Adobe Photoshop 2025"
+	}
+
+	port = os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 }
 
@@ -139,7 +151,7 @@ func photoshop(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
 		return
 	}
-	cmd := exec.Command("open", "-a", "Adobe Photoshop 2025", safePath)
+	cmd := exec.Command("open", "-a", photoshopApp, safePath)
 	cmd.Start()
 	c.JSON(http.StatusOK, "ok")
 }
@@ -147,7 +159,12 @@ func photoshop(c *gin.Context) {
 func scanFolder(c *gin.Context) {
 	path := c.Query("path")
 	fullPath, err := filepath.Abs(filepath.Join(dir, path))
-	if err != nil || !strings.HasPrefix(fullPath, dir) {
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid path"})
+		return
+	}
+	rel, relErr := filepath.Rel(dir, fullPath)
+	if relErr != nil || strings.HasPrefix(rel, "..") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid path"})
 		return
 	}
@@ -460,28 +477,6 @@ func showAllLiked(c *gin.Context) {
 	c.JSON(http.StatusOK, actions)
 }
 
-func copyNomad(c *gin.Context) {
-	var actions []Act
-	result := db.Where("nomad = 1").Find(&actions)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
-
-	for _, act := range actions {
-		oldPath := filepath.Join(dir, act.Folder, act.Name)
-		newPath := filepath.Join(dir, "NOMAD", act.Name)
-
-		fmt.Println(newPath, oldPath)
-
-		//if err := copyFile(oldPath, newPath); err != nil {
-		//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		//	return
-		//}
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "All GP files moved successfully"})
-}
 
 func moveAllToGP(c *gin.Context) {
 	var actions []Act
@@ -649,11 +644,10 @@ func main() {
 	r.GET("/all-liked", showAllLiked)
 	r.GET("/all-nomad", showAllNomad)
 	r.GET("/all-book", showAllBook)
-	r.GET("/copy-nomad", copyNomad)
 	r.GET("/empty", emptyTrashBin)
 	r.GET("/actions", getActionsByYear)
 	r.POST("/actions", postOrUpdateAction)
 	r.POST("/generate-thumbs", generateThumbs)
 
-	r.Run(":8080")
+	r.Run(":" + port)
 }

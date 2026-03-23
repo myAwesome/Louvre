@@ -64,7 +64,6 @@ const Bin = () => {
                                 backgroundColor: img.name.slice(-3) !== "jpg" ? "red" : "transparent"
                             }}>
                                 <div style={{
-                                         // backgroundImage: `url("/assets/${FOLDER}/${id}/${img.name}")`,
                                          backgroundImage: `url("/assets/${FOLDER}/${img.name}")`,
                                          width: "100%",
                                          height: "100%",
