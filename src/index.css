@@ -30,7 +30,7 @@
 }
 
 [data-theme="night"] {
-  --app-bg: #141414;
+  --app-bg: #0b0d10;
   --app-text: #ddd;
   --muted-text: #aaa;
   --nav-bg: #0d0d0d;
@@ -54,6 +54,11 @@
   --table-head-text: #aaa;
   --table-striped-bg: rgba(255, 255, 255, 0.03);
   --table-hover-bg: rgba(255, 255, 255, 0.06);
+}
+
+html, body, #root {
+  min-height: 100%;
+  background: var(--app-bg);
 }
 
 body {
