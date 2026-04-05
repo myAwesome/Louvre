@@ -149,6 +149,7 @@ const Folders = () => {
                     <th>likes</th>
                     <th>gp</th>
                     <th>nomad</th>
+                    <th>book</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -164,6 +165,7 @@ const Folders = () => {
                             <td>{item.like}</td>
                             <td>{item.gp}</td>
                             <td>{item.nomad}</td>
+                            <td>{item.book}</td>
                         </tr>
                     ) : ""
                 ))}

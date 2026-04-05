@@ -104,6 +104,7 @@ type FileInfo struct {
 	GP        int64  `json:"gp,omitempty"`
 	Nomad     int64  `json:"nomad,omitempty"`
 	Like      int64  `json:"like,omitempty"`
+	Book      int64  `json:"book,omitempty"`
 }
 
 func authMiddleware() gin.HandlerFunc {
@@ -198,6 +199,7 @@ func scanFolder(c *gin.Context) {
 				item.GP = counts["gp"]
 				item.Nomad = counts["nomad"]
 				item.Like = counts["like"]
+				item.Book = counts["book"]
 			}
 		}
 
@@ -239,6 +241,7 @@ func countActions(path string) (map[string]int64, error) {
 		"gp":    0,
 		"nomad": 0,
 		"like":  0,
+		"book":  0,
 	}
 
 	// `gp`
@@ -255,6 +258,11 @@ func countActions(path string) (map[string]int64, error) {
 	var likeCount int64
 	db.Model(&Act{}).Where("name LIKE ? AND `like` = 1", path+"%").Count(&likeCount)
 	counts["like"] = likeCount
+
+    // `book`
+    var bookCount int64
+    db.Model(&Act{}).Where("name LIKE ? AND `book` = 1", path+"%").Count(&bookCount)
+    counts["book"] = bookCount
 
 	return counts, nil
 }
