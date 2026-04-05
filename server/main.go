@@ -261,7 +261,7 @@ func countActions(path string) (map[string]int64, error) {
 
 func trashBin(c *gin.Context) {
 	var actions []Act
-	result := db.Where("`delete` = 1 order by id desc").Find(&actions)
+	result := db.Where("`delete` = 1").Order("rank DESC").Order("id DESC").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -297,7 +297,7 @@ func getActionsByYear(c *gin.Context) {
 	path := c.Query("path")
 
 	var actions []Act
-	result := db.Where("name LIKE ?", path+"%").Find(&actions)
+	result := db.Where("name LIKE ?", path+"%").Order("rank DESC").Order("id DESC").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -439,7 +439,7 @@ func copyFile(src, dst string) error {
 
 func showAllGP(c *gin.Context) {
 	var actions []Act
-	result := db.Where("gp = 1").Find(&actions)
+	result := db.Where("gp = 1").Order("rank DESC").Order("id DESC").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -449,7 +449,7 @@ func showAllGP(c *gin.Context) {
 
 func showAllNomad(c *gin.Context) {
 	var actions []Act
-	result := db.Where("nomad = 1").Find(&actions)
+	result := db.Where("nomad = 1").Order("rank DESC").Order("id DESC").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -459,7 +459,7 @@ func showAllNomad(c *gin.Context) {
 
 func showAllBook(c *gin.Context) {
 	var actions []Act
-	result := db.Where("book = 1").Find(&actions)
+	result := db.Where("book = 1").Order("rank DESC").Order("id DESC").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -469,7 +469,7 @@ func showAllBook(c *gin.Context) {
 
 func showAllLiked(c *gin.Context) {
 	var actions []Act
-	result := db.Where("`like` = 1").Find(&actions)
+	result := db.Where("`like` = 1").Order("rank DESC").Order("id DESC").Find(&actions)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
