@@ -133,6 +133,10 @@ const Folders = () => {
         return false;
     });
 
+    const currentImage = filteredData[currentImageIndex];
+    const currentKey = currentImage ? `${path}/${currentImage.name}` : "";
+    const currentAction = currentKey ? (actionsData[currentKey] || {}) : {};
+
     return (
         <div className="gallery-wrap">
             <BreadcrumbLinks id={path} />
@@ -248,53 +252,56 @@ const Folders = () => {
                     <img
                         onClick={(e) => e.stopPropagation()}
                         className="modal-img"
-                        src={`/assets/origin/${path}/${filteredData[currentImageIndex]?.name}`}
+                        src={`/assets/origin/${path}/${currentImage?.name}`}
                         alt="Фото"
                     />
                     <div className="modal-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleOpenItem(`${path}/${filteredData[currentImageIndex]?.name}`, "open-item")}>
+                            onClick={() => handleOpenItem(currentKey, "open-item")}>
                             open
                         </button>
                         <button
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleOpenItem(`${path}/${filteredData[currentImageIndex]?.name}`, "photoshop")}>
+                            onClick={() => handleOpenItem(currentKey, "photoshop")}>
                             PS
                         </button>
                         <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "like")}>
+                            className={`btn btn-sm ${currentAction.like ? "btn-success" : "btn-outline-secondary"}`}
+                            onClick={() => handleAction(currentKey, "like")}>
                             Like
                         </button>
                         <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "del")}>
+                            className={`btn btn-sm ${currentAction.delete ? "btn-danger" : "btn-outline-secondary"}`}
+                            onClick={() => handleAction(currentKey, "del")}>
                             Del
                         </button>
                         <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "gp")}>
+                            className={`btn btn-sm ${currentAction.gp ? "btn-warning" : "btn-outline-secondary"}`}
+                            onClick={() => handleAction(currentKey, "gp")}>
                             GP
                         </button>
                         <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "nomad")}>
+                            className={`btn btn-sm ${currentAction.nomad ? "btn-primary" : "btn-outline-secondary"}`}
+                            onClick={() => handleAction(currentKey, "nomad")}>
                             Nomad
                         </button>
                         <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "book")}>
+                            className={`btn btn-sm ${currentAction.book ? "btn-info" : "btn-outline-secondary"}`}
+                            onClick={() => handleAction(currentKey, "book")}>
                             Book
                         </button>
+                        <span className="btn btn-sm btn-outline-dark disabled">
+                            Rank: {currentAction.rank || 0}
+                        </span>
                         <button
                             className="btn btn-sm btn-primary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "up")}>
+                            onClick={() => handleAction(currentKey, "up")}>
                             +
                         </button>
                         <button
                             className="btn btn-sm btn-primary"
-                            onClick={() => handleAction(`${path}/${filteredData[currentImageIndex]?.name}`, "down")}>
+                            onClick={() => handleAction(currentKey, "down")}>
                             -
                         </button>
                     </div>
