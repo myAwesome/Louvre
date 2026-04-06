@@ -88,9 +88,12 @@ const Sandbox = () => {
                     <img
                         onClick={(e) => e.stopPropagation()}
                         className="modal-img"
-                        src={`/assets/${FOLDER}/${images[currentImageIndex]?.name}`}
+                        src={`/assets/origin/${images[currentImageIndex]?.name}`}
                         alt="Фото"
                     />
+                    <div>
+
+                    </div>
                 </div>
             )}
         </div>
