@@ -102,7 +102,9 @@ const Sandbox = () => {
                                 className="gallery-thumb"
                                 onClick={() => openModal(index)}
                                 style={{ backgroundImage: `url("/assets/${FOLDER}/${img.name}")` }}
-                            />
+                            >
+                                <span className="gallery-thumb-rank">{action.rank || 0}</span>
+                            </div>
                             <div className="card-actions">
                                 {isNonJpg && <span className="card-ext">{ext}</span>}
                                 <span className="card-idx">{index}</span>
