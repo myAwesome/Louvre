@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -37,6 +38,12 @@ type Act struct {
 	Book    *int8          `json:"book"`
 	Rank    *int           `json:"rank"`
 	Data    datatypes.JSON `json:"data" gorm:"type:json"`
+}
+
+type ActionRequest struct {
+	Name   string                 `json:"name"`
+	Action string                 `json:"action"`
+	Data   map[string]interface{} `json:"data"`
 }
 
 var db *gorm.DB
@@ -320,11 +327,26 @@ func getActionsByYear(c *gin.Context) {
 }
 
 func postOrUpdateAction(c *gin.Context) {
-	name := c.Query("name")     // Отримуємо name з параметрів запиту
-	action := c.Query("action") // Отримуємо action з параметрів запиту
+	var req ActionRequest
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON body"})
+			return
+		}
+	}
 
-	if name == "" || action == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing name or action parameter"})
+	name := c.Query("name")
+	if name == "" {
+		name = req.Name
+	}
+	action := c.Query("action")
+	if action == "" {
+		action = req.Action
+	}
+	hasDataPatch := len(req.Data) > 0
+
+	if name == "" || (action == "" && !hasDataPatch) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing name and action/data"})
 		return
 	}
 
@@ -335,7 +357,15 @@ func postOrUpdateAction(c *gin.Context) {
 		// Якщо запис не знайдено – створюємо новий
 		if result.Error == gorm.ErrRecordNotFound {
 			act = Act{Name: name}
-			applyAction(&act, action)
+			if action != "" {
+				applyAction(&act, action)
+			}
+			if hasDataPatch {
+				if err := mergeActionData(&act, req.Data); err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+					return
+				}
+			}
 			db.Create(&act)
 			c.JSON(http.StatusCreated, act)
 			return
@@ -347,10 +377,36 @@ func postOrUpdateAction(c *gin.Context) {
 	}
 
 	// Оновлення існуючого запису
-	applyAction(&act, action)
+	if action != "" {
+		applyAction(&act, action)
+	}
+	if hasDataPatch {
+		if err := mergeActionData(&act, req.Data); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
 	db.Save(&act)
 
 	c.JSON(http.StatusOK, act)
+}
+
+func mergeActionData(act *Act, patch map[string]interface{}) error {
+	existing := map[string]interface{}{}
+	if len(act.Data) > 0 {
+		if err := json.Unmarshal(act.Data, &existing); err != nil {
+			return fmt.Errorf("invalid existing data JSON")
+		}
+	}
+	for k, v := range patch {
+		existing[k] = v
+	}
+	updated, err := json.Marshal(existing)
+	if err != nil {
+		return fmt.Errorf("invalid data patch")
+	}
+	act.Data = datatypes.JSON(updated)
+	return nil
 }
 
 func applyAction(act *Act, action string) {
