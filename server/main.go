@@ -19,22 +19,24 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gorm.io/datatypes"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 type Act struct {
-	ID      uint   `json:"id" gorm:"primaryKey"`
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Folder  string `json:"folder"`
-	Comment string `json:"comment"`
-	Like    *int8  `json:"like"`
-	Delete  *int8  `json:"delete"`
-	GP      *int8  `json:"gp"`
-	Nomad   *int8  `json:"nomad"`
-	Book    *int8  `json:"book"`
-	Rank    *int   `json:"rank"`
+	ID      uint           `json:"id" gorm:"primaryKey"`
+	Name    string         `json:"name"`
+	Type    string         `json:"type"`
+	Folder  string         `json:"folder"`
+	Comment string         `json:"comment"`
+	Like    *int8          `json:"like"`
+	Delete  *int8          `json:"delete"`
+	GP      *int8          `json:"gp"`
+	Nomad   *int8          `json:"nomad"`
+	Book    *int8          `json:"book"`
+	Rank    *int           `json:"rank"`
+	Data    datatypes.JSON `json:"data" gorm:"type:json"`
 }
 
 var db *gorm.DB
@@ -93,6 +95,9 @@ func initDB() {
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Cannot connect to DB:", err)
+	}
+	if err := db.AutoMigrate(&Act{}); err != nil {
+		log.Fatal("Cannot migrate DB schema:", err)
 	}
 }
 
@@ -259,10 +264,10 @@ func countActions(path string) (map[string]int64, error) {
 	db.Model(&Act{}).Where("name LIKE ? AND `like` = 1", path+"%").Count(&likeCount)
 	counts["like"] = likeCount
 
-    // `book`
-    var bookCount int64
-    db.Model(&Act{}).Where("name LIKE ? AND `book` = 1", path+"%").Count(&bookCount)
-    counts["book"] = bookCount
+	// `book`
+	var bookCount int64
+	db.Model(&Act{}).Where("name LIKE ? AND `book` = 1", path+"%").Count(&bookCount)
+	counts["book"] = bookCount
 
 	return counts, nil
 }
@@ -484,7 +489,6 @@ func showAllLiked(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, actions)
 }
-
 
 func moveAllToGP(c *gin.Context) {
 	var actions []Act
