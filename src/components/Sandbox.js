@@ -100,6 +100,7 @@ const Sandbox = () => {
     };
 
     const getBookPlacement = (action = {}) => action?.data?.bookPlacement || "";
+    const getDataFlag = (action = {}, key) => Boolean(action?.data?.[key]);
 
     const currentImage = images[currentImageIndex];
     const currentKey = currentImage?.name || "";
@@ -149,6 +150,16 @@ const Sandbox = () => {
                                             className={`btn btn-sm ${getBookPlacement(action) === "back" ? "btn-info" : "btn-outline-secondary"}`}
                                             onClick={() => handleDataAction(img.name, { bookPlacement: "back" })}>
                                             B
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${getDataFlag(action, "small") ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { small: !getDataFlag(action, "small") })}>
+                                            small
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${getDataFlag(action, "crop") ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { crop: !getDataFlag(action, "crop") })}>
+                                            crop
                                         </button>
                                     </>
                                 ) : (
@@ -259,6 +270,16 @@ const Sandbox = () => {
                                     className={`btn btn-sm ${getBookPlacement(currentAction) === "back" ? "btn-info" : "btn-outline-secondary"}`}
                                     onClick={() => handleDataAction(currentKey, { bookPlacement: "back" })}>
                                     B
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${getDataFlag(currentAction, "small") ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { small: !getDataFlag(currentAction, "small") })}>
+                                    small
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${getDataFlag(currentAction, "crop") ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { crop: !getDataFlag(currentAction, "crop") })}>
+                                    crop
                                 </button>
                             </>
                         )}
