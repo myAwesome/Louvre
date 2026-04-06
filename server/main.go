@@ -37,7 +37,7 @@ type Act struct {
 	Nomad   *int8          `json:"nomad"`
 	Book    *int8          `json:"book"`
 	Rank    *int           `json:"rank"`
-	Data    datatypes.JSON `json:"data" gorm:"type:json"`
+	Data    datatypes.JSON `json:"data" gorm:"type:longtext"`
 }
 
 type ActionRequest struct {
