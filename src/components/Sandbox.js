@@ -143,12 +143,12 @@ const Sandbox = () => {
                                         <button
                                             className={`btn btn-sm ${getBookPlacement(action) === "cover" ? "btn-info" : "btn-outline-secondary"}`}
                                             onClick={() => handleDataAction(img.name, { bookPlacement: "cover" })}>
-                                            Cover
+                                            C
                                         </button>
                                         <button
                                             className={`btn btn-sm ${getBookPlacement(action) === "back" ? "btn-info" : "btn-outline-secondary"}`}
                                             onClick={() => handleDataAction(img.name, { bookPlacement: "back" })}>
-                                            Back
+                                            B
                                         </button>
                                     </>
                                 ) : (
@@ -253,12 +253,12 @@ const Sandbox = () => {
                                 <button
                                     className={`btn btn-sm ${getBookPlacement(currentAction) === "cover" ? "btn-info" : "btn-outline-secondary"}`}
                                     onClick={() => handleDataAction(currentKey, { bookPlacement: "cover" })}>
-                                    Cover
+                                    C
                                 </button>
                                 <button
                                     className={`btn btn-sm ${getBookPlacement(currentAction) === "back" ? "btn-info" : "btn-outline-secondary"}`}
                                     onClick={() => handleDataAction(currentKey, { bookPlacement: "back" })}>
-                                    Back
+                                    B
                                 </button>
                             </>
                         )}
