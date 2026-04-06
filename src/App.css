@@ -176,6 +176,25 @@
   box-shadow: 0 20px 60px var(--modal-shadow);
 }
 
+.modal-media {
+  position: relative;
+}
+
+.modal-rank-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  color: #1f1f1f;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(2px);
+}
+
 .modal-actions {
   display: flex;
   gap: 6px;

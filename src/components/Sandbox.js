@@ -142,12 +142,16 @@ const Sandbox = () => {
 
             {showModal && (
                 <div className="modal-overlay" onClick={closeModal}>
-                    <img
-                        onClick={(e) => e.stopPropagation()}
-                        className="modal-img"
-                        src={`/assets/origin/${currentImage?.name}`}
-                        alt="Фото"
-                    />
+                    <div className="modal-media" onClick={(e) => e.stopPropagation()}>
+                        <img
+                            className="modal-img"
+                            src={`/assets/origin/${currentImage?.name}`}
+                            alt="Фото"
+                        />
+                        <span className="modal-rank-badge">
+                            Rank: {currentAction.rank || 0}
+                        </span>
+                    </div>
                     <div className="modal-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                             className="btn btn-sm btn-outline-secondary"
@@ -184,9 +188,6 @@ const Sandbox = () => {
                             onClick={() => handleAction(currentKey, "book")}>
                             Book
                         </button>
-                        <span className="btn btn-sm btn-outline-dark disabled">
-                            Rank: {currentAction.rank || 0}
-                        </span>
                         <button
                             className="btn btn-sm btn-primary"
                             onClick={() => handleAction(currentKey, "up")}>
