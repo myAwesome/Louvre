@@ -218,6 +218,9 @@ const Folders = () => {
                             <div className="card-actions">
                                 {isNonJpg && <span className="card-ext">{ext}</span>}
                                 <span className="card-idx">{index}</span>
+                                <span className="btn btn-sm btn-outline-dark disabled">
+                                    R: {action.rank || 0}
+                                </span>
                                 <button
                                     className={`btn btn-sm ${action.like ? "btn-success" : "btn-outline-secondary"}`}
                                     onClick={() => handleAction(key, "like")}>

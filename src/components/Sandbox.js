@@ -89,34 +89,56 @@ const Sandbox = () => {
         return <p>Завантаження...</p>;
     }
     return (
-        <div>
-            <div>
-                <h4>{id}: <b>{data.length} </b></h4>
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4, 1fr)",
-                    gap: 40,
-                    justifyItems: "center",
-                    maxWidth: 1250,
-                    margin: "auto"
-                }}>
-                    {images.map((img, index) => (
-                        <div key={index} style={{
-                            width: "300px",
-                            height: "300px",
-                            cursor: "pointer",
-                            backgroundColor: img.name.slice(-3) !== "jpg" ? "red" : "transparent"
-                        }} onClick={() => openModal(index)}>
-                            <div style={{
-                                backgroundImage: `url("/assets/${FOLDER}/${img.name}")`,
-                                width: "100%",
-                                height: "100%",
-                                backgroundSize: "cover"
-                            }}/>
+        <div className="gallery-wrap">
+            <h4>{id}: <b>{images.length}</b></h4>
+            <div className="gallery-grid">
+                {images.map((img, index) => {
+                    const action = actionsData[img.name] || {};
+                    const ext = img.name.slice(-3).toLowerCase();
+                    const isNonJpg = ext !== "jpg";
+                    return (
+                        <div key={index} className={`gallery-card${isNonJpg ? " card-non-jpg" : ""}`}>
+                            <div
+                                className="gallery-thumb"
+                                onClick={() => openModal(index)}
+                                style={{ backgroundImage: `url("/assets/${FOLDER}/${img.name}")` }}
+                            />
+                            <div className="card-actions">
+                                {isNonJpg && <span className="card-ext">{ext}</span>}
+                                <span className="card-idx">{index}</span>
+                                <span className="btn btn-sm btn-outline-dark disabled">
+                                    R: {action.rank || 0}
+                                </span>
+                                <button
+                                    className={`btn btn-sm ${action.like ? "btn-success" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(img.name, "like")}>
+                                    Like
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.delete ? "btn-danger" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(img.name, "del")}>
+                                    Del
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.gp ? "btn-warning" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(img.name, "gp")}>
+                                    GP
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.nomad ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(img.name, "nomad")}>
+                                    Nomad
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${action.book ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(img.name, "book")}>
+                                    Book
+                                </button>
+                            </div>
                         </div>
-                    ))}
+                    );
+                })}
                 </div>
-            </div>
 
             {showModal && (
                 <div className="modal-overlay" onClick={closeModal}>
