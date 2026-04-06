@@ -103,9 +103,29 @@ func initDB() {
 	if err != nil {
 		log.Fatal("Cannot connect to DB:", err)
 	}
-	if err := db.AutoMigrate(&Act{}); err != nil {
+	if err := ensureActsDataColumn(); err != nil {
 		log.Fatal("Cannot migrate DB schema:", err)
 	}
+}
+
+func ensureActsDataColumn() error {
+	var count int64
+	check := db.Raw(`
+		SELECT COUNT(*)
+		FROM information_schema.COLUMNS
+		WHERE TABLE_SCHEMA = DATABASE()
+		  AND TABLE_NAME = 'acts'
+		  AND COLUMN_NAME = 'data'
+	`).Scan(&count)
+	if check.Error != nil {
+		return check.Error
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	return db.Exec("ALTER TABLE `acts` ADD COLUMN `data` LONGTEXT NULL").Error
 }
 
 // FileInfo - структура для JSON-відповіді
