@@ -12,6 +12,7 @@ const Sandbox = () => {
     const [showModal, setShowModal] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const {id} = useParams();
+    const isBookPage = id === "book";
 
 
     useEffect(() => {
@@ -81,6 +82,25 @@ const Sandbox = () => {
         }
     };
 
+    const handleDataAction = async (name, dataPatch) => {
+        try {
+            const response = await fetch(`${API_BASE}/actions`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, data: dataPatch }),
+            });
+
+            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
+            const updatedAction = await response.json();
+            setActionsData(prev => ({ ...prev, [name]: updatedAction }));
+        } catch (error) {
+            console.error("Data action failed:", error.message);
+        }
+    };
+
+    const getBookPlacement = (action = {}) => action?.data?.bookPlacement || "";
+
     const currentImage = images[currentImageIndex];
     const currentKey = currentImage?.name || "";
     const currentAction = currentKey ? (actionsData[currentKey] || {}) : {};
@@ -108,31 +128,58 @@ const Sandbox = () => {
                             <div className="card-actions">
                                 {isNonJpg && <span className="card-ext">{ext}</span>}
                                 <span className="card-idx">{index}</span>
-                                <button
-                                    className={`btn btn-sm ${action.like ? "btn-success" : "btn-outline-secondary"}`}
-                                    onClick={() => handleAction(img.name, "like")}>
-                                    Like
-                                </button>
-                                <button
-                                    className={`btn btn-sm ${action.delete ? "btn-danger" : "btn-outline-secondary"}`}
-                                    onClick={() => handleAction(img.name, "del")}>
-                                    Del
-                                </button>
-                                <button
-                                    className={`btn btn-sm ${action.gp ? "btn-warning" : "btn-outline-secondary"}`}
-                                    onClick={() => handleAction(img.name, "gp")}>
-                                    GP
-                                </button>
-                                <button
-                                    className={`btn btn-sm ${action.nomad ? "btn-primary" : "btn-outline-secondary"}`}
-                                    onClick={() => handleAction(img.name, "nomad")}>
-                                    Nomad
-                                </button>
-                                <button
-                                    className={`btn btn-sm ${action.book ? "btn-info" : "btn-outline-secondary"}`}
-                                    onClick={() => handleAction(img.name, "book")}>
-                                    Book
-                                </button>
+                                {isBookPage ? (
+                                    <>
+                                        <button
+                                            className={`btn btn-sm ${getBookPlacement(action) === "full_page" ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { bookPlacement: "full_page" })}>
+                                            Full Page
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${getBookPlacement(action) === "half_page" ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { bookPlacement: "half_page" })}>
+                                            Half Page
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${getBookPlacement(action) === "cover" ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { bookPlacement: "cover" })}>
+                                            Cover
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${getBookPlacement(action) === "back" ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { bookPlacement: "back" })}>
+                                            Back
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            className={`btn btn-sm ${action.like ? "btn-success" : "btn-outline-secondary"}`}
+                                            onClick={() => handleAction(img.name, "like")}>
+                                            Like
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${action.delete ? "btn-danger" : "btn-outline-secondary"}`}
+                                            onClick={() => handleAction(img.name, "del")}>
+                                            Del
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${action.gp ? "btn-warning" : "btn-outline-secondary"}`}
+                                            onClick={() => handleAction(img.name, "gp")}>
+                                            GP
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${action.nomad ? "btn-primary" : "btn-outline-secondary"}`}
+                                            onClick={() => handleAction(img.name, "nomad")}>
+                                            Nomad
+                                        </button>
+                                        <button
+                                            className={`btn btn-sm ${action.book ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleAction(img.name, "book")}>
+                                            Book
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     );
@@ -162,31 +209,59 @@ const Sandbox = () => {
                             onClick={() => handleOpenItem(currentKey, "photoshop")}>
                             PS
                         </button>
-                        <button
-                            className={`btn btn-sm ${currentAction.like ? "btn-success" : "btn-outline-secondary"}`}
-                            onClick={() => handleAction(currentKey, "like")}>
-                            Like
-                        </button>
-                        <button
-                            className={`btn btn-sm ${currentAction.delete ? "btn-danger" : "btn-outline-secondary"}`}
-                            onClick={() => handleAction(currentKey, "del")}>
-                            Del
-                        </button>
-                        <button
-                            className={`btn btn-sm ${currentAction.gp ? "btn-warning" : "btn-outline-secondary"}`}
-                            onClick={() => handleAction(currentKey, "gp")}>
-                            GP
-                        </button>
-                        <button
-                            className={`btn btn-sm ${currentAction.nomad ? "btn-primary" : "btn-outline-secondary"}`}
-                            onClick={() => handleAction(currentKey, "nomad")}>
-                            Nomad
-                        </button>
-                        <button
-                            className={`btn btn-sm ${currentAction.book ? "btn-info" : "btn-outline-secondary"}`}
-                            onClick={() => handleAction(currentKey, "book")}>
-                            Book
-                        </button>
+                        {!isBookPage && (
+                            <>
+                                <button
+                                    className={`btn btn-sm ${currentAction.like ? "btn-success" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(currentKey, "like")}>
+                                    Like
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${currentAction.delete ? "btn-danger" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(currentKey, "del")}>
+                                    Del
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${currentAction.gp ? "btn-warning" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(currentKey, "gp")}>
+                                    GP
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${currentAction.nomad ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(currentKey, "nomad")}>
+                                    Nomad
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${currentAction.book ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleAction(currentKey, "book")}>
+                                    Book
+                                </button>
+                            </>
+                        )}
+                        {isBookPage && (
+                            <>
+                                <button
+                                    className={`btn btn-sm ${getBookPlacement(currentAction) === "full_page" ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { bookPlacement: "full_page" })}>
+                                    Full Page
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${getBookPlacement(currentAction) === "half_page" ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { bookPlacement: "half_page" })}>
+                                    Half Page
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${getBookPlacement(currentAction) === "cover" ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { bookPlacement: "cover" })}>
+                                    Cover
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${getBookPlacement(currentAction) === "back" ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { bookPlacement: "back" })}>
+                                    Back
+                                </button>
+                            </>
+                        )}
                         <button
                             className="btn btn-sm btn-primary"
                             onClick={() => handleAction(currentKey, "up")}>
