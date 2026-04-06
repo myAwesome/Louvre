@@ -161,6 +161,11 @@ const Sandbox = () => {
                                             onClick={() => handleDataAction(img.name, { crop: !getDataFlag(action, "crop") })}>
                                             crop
                                         </button>
+                                        <button
+                                            className={`btn btn-sm ${getDataFlag(action, "placed") ? "btn-info" : "btn-outline-secondary"}`}
+                                            onClick={() => handleDataAction(img.name, { placed: !getDataFlag(action, "placed") })}>
+                                            placed
+                                        </button>
                                     </>
                                 ) : (
                                     <>
@@ -280,6 +285,11 @@ const Sandbox = () => {
                                     className={`btn btn-sm ${getDataFlag(currentAction, "crop") ? "btn-info" : "btn-outline-secondary"}`}
                                     onClick={() => handleDataAction(currentKey, { crop: !getDataFlag(currentAction, "crop") })}>
                                     crop
+                                </button>
+                                <button
+                                    className={`btn btn-sm ${getDataFlag(currentAction, "placed") ? "btn-info" : "btn-outline-secondary"}`}
+                                    onClick={() => handleDataAction(currentKey, { placed: !getDataFlag(currentAction, "placed") })}>
+                                    placed
                                 </button>
                             </>
                         )}
