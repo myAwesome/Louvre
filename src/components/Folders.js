@@ -36,8 +36,6 @@ const Folders = () => {
     const [showModal, setShowModal] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [activeFilters, setActiveFilters] = useState(new Set());
-    const [selectedItems, setSelectedItems] = useState(new Set());
-    const [batchDeleting, setBatchDeleting] = useState(false);
 
 
     useEffect(() => {
@@ -105,12 +103,12 @@ const Folders = () => {
 
             const updatedAction = await response.json();
             setActionsData(prev => ({ ...prev, [name]: updatedAction }));
-            return updatedAction;
         } catch (error) {
             console.error("Action failed:", error.message);
-            return null;
         }
     };
+
+    if (loading) return <p style={{padding: 20, color: '#888'}}>Завантаження...</p>;
 
     const toggleFilter = (filter) => {
         setActiveFilters(prev => {
@@ -135,71 +133,9 @@ const Folders = () => {
         return false;
     });
 
-    const visibleKeys = filteredData.map((img) => `${path}/${img.name}`);
-    const selectedCount = visibleKeys.filter((key) => selectedItems.has(key)).length;
-    const allVisibleSelected = visibleKeys.length > 0 && selectedCount === visibleKeys.length;
-    const hasSelection = selectedCount > 0;
-
-    useEffect(() => {
-        if (visibleKeys.length === 0) {
-            setSelectedItems(new Set());
-            return;
-        }
-
-        const visibleSet = new Set(visibleKeys);
-        setSelectedItems((prev) => {
-            const next = new Set(Array.from(prev).filter((key) => visibleSet.has(key)));
-            if (next.size === prev.size) return prev;
-            return next;
-        });
-    }, [path, filteredData]);
-
-    const toggleSelectItem = (key) => {
-        setSelectedItems((prev) => {
-            const next = new Set(prev);
-            if (next.has(key)) next.delete(key);
-            else next.add(key);
-            return next;
-        });
-    };
-
-    const toggleSelectAllVisible = () => {
-        setSelectedItems((prev) => {
-            if (allVisibleSelected) return new Set();
-            return new Set(visibleKeys);
-        });
-    };
-
-    const handleBatchDelete = async () => {
-        const keysToDelete = Array.from(selectedItems).filter((key) => {
-            const action = actionsData[key] || {};
-            return !action.delete;
-        });
-        if (keysToDelete.length === 0 || batchDeleting) return;
-
-        const confirmed = window.confirm(`Mark ${keysToDelete.length} asset(s) as deleted?`);
-        if (!confirmed) return;
-
-        setBatchDeleting(true);
-        try {
-            const results = await Promise.allSettled(
-                keysToDelete.map((key) => handleAction(key, "del"))
-            );
-            const failed = results.filter((result) => result.status !== "fulfilled" || !result.value).length;
-            if (failed > 0) {
-                console.error(`Batch delete completed with ${failed} failure(s).`);
-            }
-            setSelectedItems(new Set());
-        } finally {
-            setBatchDeleting(false);
-        }
-    };
-
     const currentImage = filteredData[currentImageIndex];
     const currentKey = currentImage ? `${path}/${currentImage.name}` : "";
     const currentAction = currentKey ? (actionsData[currentKey] || {}) : {};
-
-    if (loading) return <p style={{padding: 20, color: '#888'}}>Завантаження...</p>;
 
     return (
         <div className="gallery-wrap">
@@ -238,17 +174,6 @@ const Folders = () => {
 
             <div className="filter-bar">
                 <button
-                    className={`btn btn-sm ${allVisibleSelected ? "btn-dark" : "btn-outline-dark"}`}
-                    onClick={toggleSelectAllVisible}>
-                    {allVisibleSelected ? "Unselect all" : "Select all"}
-                </button>
-                <button
-                    className="btn btn-sm btn-danger"
-                    onClick={handleBatchDelete}
-                    disabled={!hasSelection || batchDeleting}>
-                    {batchDeleting ? "Deleting..." : `Batch Del (${selectedCount})`}
-                </button>
-                <button
                     className={`btn btn-sm ${activeFilters.has('unmarked') ? "btn-secondary" : "btn-outline-secondary"}`}
                     onClick={() => toggleFilter('unmarked')}>
                     NO MARKED
@@ -283,22 +208,14 @@ const Folders = () => {
                     const action = actionsData[key] || {};
                     const ext = img.name.slice(-3).toLowerCase();
                     const isNonJpg = ext !== "jpg";
-                    const isSelected = selectedItems.has(key);
                     return (
-                        <div key={index} className={`gallery-card${isNonJpg ? " card-non-jpg" : ""}${isSelected ? " card-selected" : ""}`}>
+                        <div key={index} className={`gallery-card${isNonJpg ? " card-non-jpg" : ""}`}>
                             <div
                                 className="gallery-thumb"
                                 onClick={() => openModal(index)}
                                 style={{ backgroundImage: `url("/assets/${FOLDER}/${path}/${img.name}")` }}
                             />
                             <div className="card-actions">
-                                <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onClick={(event) => event.stopPropagation()}
-                                    onChange={() => toggleSelectItem(key)}
-                                    aria-label={`Select ${img.name}`}
-                                />
                                 {isNonJpg && <span className="card-ext">{ext}</span>}
                                 <span className="card-idx">{index}</span>
                                 <span className="btn btn-sm btn-outline-dark disabled">
