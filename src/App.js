@@ -15,7 +15,9 @@ const getInitialTheme = () => {
 };
 
 function App() {
+  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
   const [theme, setTheme] = useState(getInitialTheme);
+  const [generateThumbsLoading, setGenerateThumbsLoading] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -24,6 +26,17 @@ function App() {
 
   const handleThemeToggle = () => {
     setTheme((prev) => (prev === "night" ? "day" : "night"));
+  };
+
+  const handleGenerateThumbs = async () => {
+    try {
+      setGenerateThumbsLoading(true)
+      await fetch(`${API_BASE}/generate-thumbs`, { method: "POST"});
+      setGenerateThumbsLoading(false)
+    } catch (error) {
+      console.error("Action failed:", error.message);
+    }
+
   };
 
   return (
@@ -41,6 +54,18 @@ function App() {
             <Link to={`/sandbox/nomad`}>Nomad</Link>
             <span className="sep">·</span>
             <Link to={`/sandbox/book`}>Book</Link>
+
+            <span className="sep">·</span>
+
+            <button
+                type="button"
+                className={`generate-thumbs ${generateThumbsLoading ? 'loading' : ''}`}
+                onClick={handleGenerateThumbs}
+                disabled={generateThumbsLoading}
+            >
+              {generateThumbsLoading ? 'Generating...' : 'Generate Thumbs'}
+            </button>
+
             <button type="button" className="theme-toggle" onClick={handleThemeToggle}>
               {theme === "night" ? "Day" : "Night"}
             </button>
